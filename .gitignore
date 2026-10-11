@@ -1,0 +1,43 @@
+# Python & virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.env
+!.env.example
+.venv/
+venv/
+ENV/
+*.sqlite3
+
+# Node & dependencies
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Logs and databases
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor & OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Local automation & scheduler scripts
+*.ps1
+git_push.bat
+run_daily_push.bat
+commit_schedule.json
+schedule_state.json
+
