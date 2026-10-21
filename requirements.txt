@@ -1,0 +1,2 @@
+# LAKSH Backend Dependencies (Root-level copy for seamless cloud hosting deployment)
+-r fitlog/backend/requirements.txt
