@@ -110,5 +110,19 @@ for r in api_routers:
 @app.get("/health", tags=["Health"])
 @app.get("/api/health", tags=["Health"])
 def health_check():
-    """Health check endpoint to verify backend operational status."""
-    return {"status": "ok", "app": settings.APP_NAME, "env": settings.APP_ENV}
+    """Health check endpoint to verify backend operational and database connectivity status."""
+    db_status = "connected"
+    try:
+        from sqlalchemy import text
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+    except Exception as e:
+        db_status = f"unreachable ({type(e).__name__})"
+
+    return {
+        "status": "ok",
+        "app": settings.APP_NAME,
+        "env": settings.APP_ENV,
+        "database": db_status,
+        "version": "1.0.0"
+    }
