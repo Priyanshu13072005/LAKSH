@@ -2,10 +2,11 @@
 LAKSH - Initial database seeder for built-in gym exercises.
 """
 
+from typing import List, Dict, Any
 from sqlalchemy.orm import Session
 from app.models.exercise import Exercise
 
-BUILT_IN_EXERCISES = [
+BUILT_IN_EXERCISES: List[Dict[str, Any]] = [
     {
         "name": "Barbell Bench Press",
         "muscle_group": "Chest",
