@@ -18,7 +18,7 @@ import {
   Layers
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { workoutAPI } from '../services/api';
+import { workoutAPI, getMediaUrl } from '../services/api';
 
 export default function Navbar({ onOpenGoalModal }) {
   const { user, logout } = useAuth();
@@ -149,7 +149,7 @@ export default function Navbar({ onOpenGoalModal }) {
             >
               <div className="w-8 h-8 rounded-lg overflow-hidden bg-gradient-to-br from-red-600 to-rose-600 flex items-center justify-center shadow-lg shadow-red-600/20 group-hover:scale-105 transition-transform text-white">
                 {user?.profile_pic_url ? (
-                  <img src={user.profile_pic_url} alt={user.name} className="w-full h-full object-cover" />
+                  <img src={getMediaUrl(user.profile_pic_url)} alt={user.name} className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-xs font-black">{initials}</span>
                 )}
@@ -241,7 +241,7 @@ export default function Navbar({ onOpenGoalModal }) {
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg overflow-hidden bg-gradient-to-br from-red-600 to-rose-600 flex items-center justify-center text-white">
                 {user?.profile_pic_url ? (
-                  <img src={user.profile_pic_url} alt={user?.name} className="w-full h-full object-cover" />
+                  <img src={getMediaUrl(user.profile_pic_url)} alt={user?.name} className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-xs font-black">{initials}</span>
                 )}

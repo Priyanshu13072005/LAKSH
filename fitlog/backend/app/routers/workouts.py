@@ -2,9 +2,12 @@
 LAKSH - Workout router: sessions, exercises within sessions, sets.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Response
 from sqlalchemy.orm import Session, joinedload
 from datetime import datetime, timezone, date
+import io
+import csv
+import json
 from app.db.session import get_db
 from app.models.user import User
 from app.models.workout import WorkoutSession
@@ -453,6 +456,7 @@ def add_set(
         weight_kg=ws.weight_kg,
         rest_seconds=ws.rest_seconds,
         is_completed=ws.is_completed,
+        set_type=ws.set_type,
         notes=ws.notes,
     )
     db.add(new_set)
@@ -507,4 +511,206 @@ def delete_set(
         raise HTTPException(status_code=404, detail="Set not found.")
     db.delete(s)
     db.commit()
+
+
+# ─── Previous Performance (Ghost Data) ──────────────────────────
+@router.get("/exercises/{exercise_id}/previous-sets")
+def get_previous_sets(
+    exercise_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Get the user's most recent completed performance for a specific exercise.
+    Returns the sets from the latest COMPLETED workout that included this exercise.
+    Used to display 'ghost data' placeholders during active workouts.
+    """
+    # Find the most recent completed workout that contained this exercise
+    latest_we = (
+        db.query(WorkoutExercise)
+        .join(WorkoutSession)
+        .filter(
+            WorkoutSession.user_id == current_user.id,
+            WorkoutSession.status == "COMPLETED",
+            WorkoutExercise.exercise_id == exercise_id,
+        )
+        .order_by(WorkoutSession.workout_date.desc(), WorkoutSession.started_at.desc())
+        .first()
+    )
+
+    if not latest_we:
+        return {"exercise_id": exercise_id, "previous_sets": [], "workout_date": None}
+
+    # Load sets for that workout exercise
+    sets_data = (
+        db.query(WorkoutSet)
+        .filter(
+            WorkoutSet.workout_exercise_id == latest_we.id,
+            WorkoutSet.is_completed == True,
+        )
+        .order_by(WorkoutSet.set_number)
+        .all()
+    )
+
+    workout_session = (
+        db.query(WorkoutSession)
+        .filter(WorkoutSession.id == latest_we.workout_session_id)
+        .first()
+    )
+
+    return {
+        "exercise_id": exercise_id,
+        "workout_date": str(workout_session.workout_date) if workout_session else None,
+        "previous_sets": [
+            {
+                "set_number": s.set_number,
+                "weight_kg": s.weight_kg,
+                "repetitions": s.repetitions,
+                "set_type": getattr(s, "set_type", "NORMAL"),
+            }
+            for s in sets_data
+        ],
+    }
+
+
+# ─── Data Export Endpoints (CSV & JSON) ─────────────────────────
+@router.get("/export/csv", summary="Export all workouts and sets as CSV")
+def export_workouts_csv(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Generate a downloadable CSV file containing every logged set and workout."""
+    workouts = (
+        db.query(WorkoutSession)
+        .options(
+            joinedload(WorkoutSession.exercises)
+            .joinedload(WorkoutExercise.exercise),
+            joinedload(WorkoutSession.exercises)
+            .joinedload(WorkoutExercise.sets),
+        )
+        .filter(WorkoutSession.user_id == current_user.id)
+        .order_by(WorkoutSession.workout_date.desc(), WorkoutSession.started_at.desc())
+        .all()
+    )
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        "Workout ID",
+        "Workout Date",
+        "Workout Title",
+        "Duration (Mins)",
+        "Status",
+        "Exercise Name",
+        "Muscle Group",
+        "Equipment",
+        "Set Number",
+        "Set Type",
+        "Weight (kg)",
+        "Repetitions",
+        "Completed",
+        "Set Volume (kg)",
+        "Set Notes",
+    ])
+
+    for w in workouts:
+        duration_mins = round((w.duration_seconds or 0) / 60, 1)
+        for we in w.exercises:
+            ex_name = we.exercise.name if we.exercise else "Unknown"
+            m_group = we.exercise.muscle_group if we.exercise else ""
+            equip = we.exercise.equipment if we.exercise else ""
+            for s in we.sets:
+                w_kg = s.weight_kg or 0.0
+                volume = round(w_kg * s.repetitions, 2) if s.is_completed else 0.0
+                writer.writerow([
+                    w.id,
+                    w.workout_date.isoformat() if w.workout_date else "",
+                    w.title,
+                    duration_mins,
+                    w.status,
+                    ex_name,
+                    m_group,
+                    equip,
+                    s.set_number,
+                    getattr(s, "set_type", "NORMAL"),
+                    s.weight_kg if s.weight_kg is not None else "",
+                    s.repetitions,
+                    "Yes" if s.is_completed else "No",
+                    volume,
+                    s.notes or "",
+                ])
+
+    csv_data = output.getvalue()
+    filename = f"laksh_workouts_{datetime.now(timezone.utc).strftime('%Y%m%d')}.csv"
+    return Response(
+        content=csv_data,
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get("/export/json", summary="Export all workouts and sets as JSON")
+def export_workouts_json(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Generate a downloadable JSON backup of all workouts and sets."""
+    workouts = (
+        db.query(WorkoutSession)
+        .options(
+            joinedload(WorkoutSession.exercises)
+            .joinedload(WorkoutExercise.exercise),
+            joinedload(WorkoutSession.exercises)
+            .joinedload(WorkoutExercise.sets),
+        )
+        .filter(WorkoutSession.user_id == current_user.id)
+        .order_by(WorkoutSession.workout_date.desc(), WorkoutSession.started_at.desc())
+        .all()
+    )
+
+    data = []
+    for w in workouts:
+        w_dict = {
+            "id": w.id,
+            "title": w.title,
+            "workout_date": w.workout_date.isoformat() if w.workout_date else None,
+            "started_at": w.started_at.isoformat() if w.started_at else None,
+            "ended_at": w.ended_at.isoformat() if w.ended_at else None,
+            "duration_seconds": w.duration_seconds,
+            "status": w.status,
+            "notes": w.notes,
+            "exercises": [],
+        }
+        for we in w.exercises:
+            we_dict = {
+                "id": we.id,
+                "order_index": we.order_index,
+                "notes": we.notes,
+                "exercise_name": we.exercise.name if we.exercise else None,
+                "muscle_group": we.exercise.muscle_group if we.exercise else None,
+                "equipment": we.exercise.equipment if we.exercise else None,
+                "sets": [
+                    {
+                        "id": s.id,
+                        "set_number": s.set_number,
+                        "weight_kg": s.weight_kg,
+                        "repetitions": s.repetitions,
+                        "set_type": getattr(s, "set_type", "NORMAL"),
+                        "is_completed": s.is_completed,
+                        "notes": s.notes,
+                    }
+                    for s in we.sets
+                ],
+            }
+            w_dict["exercises"].append(we_dict)
+        data.append(w_dict)
+
+    json_str = json.dumps({"workouts": data, "exported_at": datetime.now(timezone.utc).isoformat()}, indent=2)
+    filename = f"laksh_backup_{datetime.now(timezone.utc).strftime('%Y%m%d')}.json"
+    return Response(
+        content=json_str,
+        media_type="application/json",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
 

@@ -2,16 +2,14 @@
 
 @layer base {
   :root {
-    --bg-dark: #090d16;
-    --card-bg: rgba(18, 24, 38, 0.7);
+    --bg-dark: #08080a;
+    --card-bg: rgba(18, 18, 22, 0.85);
     --border-color: rgba(255, 255, 255, 0.08);
-    --accent-emerald: #10b981;
-    --accent-blue: #3b82f6;
-    --accent-cyan: #06b6d4;
-    --accent-amber: #f59e0b;
-    --accent-rose: #f43f5e;
+    --accent-red: #ef4444;
+    --accent-crimson: #dc2626;
+    --accent-white: #ffffff;
     --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
+    --text-secondary: #a1a1aa;
     /* Safe area for iOS notch / Android gesture nav */
     --safe-area-bottom: env(safe-area-inset-bottom, 0px);
   }
@@ -45,6 +43,7 @@
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
+    background-color: #08080a;
   }
 
   /* Improve tap targets on mobile */
@@ -64,23 +63,23 @@
   }
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar - Sleek Black & Red */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: #08080a;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #27272a;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #ef4444;
 }
 
 /* Hide scrollbar on mobile for a cleaner look */
@@ -93,26 +92,26 @@
   }
 }
 
-/* Glassmorphism & Glow Effects */
+/* Glassmorphism & Glow Effects - Black, Red & White */
 .glass-panel {
-  background: rgba(15, 23, 42, 0.75);
+  background: rgba(14, 14, 18, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .glass-panel-interactive {
-  background: rgba(15, 23, 42, 0.75);
+  background: rgba(14, 14, 18, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-panel-interactive:hover {
-  border-color: rgba(59, 130, 246, 0.4);
+  border-color: rgba(239, 68, 68, 0.45);
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(239, 68, 68, 0.2);
 }
 
 /* No hover transform on touch devices */
@@ -122,12 +121,12 @@
   }
 }
 
-.glow-emerald {
-  box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.3);
+.glow-red {
+  box-shadow: 0 0 25px -5px rgba(239, 68, 68, 0.35);
 }
 
-.glow-blue {
-  box-shadow: 0 0 25px -5px rgba(59, 130, 246, 0.3);
+.glow-white {
+  box-shadow: 0 0 25px -5px rgba(255, 255, 255, 0.15);
 }
 
 /* Pulse animation for active workout timer */

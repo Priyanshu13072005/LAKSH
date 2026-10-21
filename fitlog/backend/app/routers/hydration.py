@@ -29,7 +29,7 @@ def get_daily_hydration(
     db: Session = Depends(get_db),
 ):
     """Get today's (or specified date's) water intake summary."""
-    d = target_date or today_utc()
+    d = target_date or datetime.now().date()
     entries = (
         db.query(WaterIntake)
         .filter(
@@ -58,11 +58,18 @@ def add_water_intake(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Log a water intake entry."""
+    """Log a water intake entry with accurate date and time."""
+    consumed_at = req.consumed_at
+    if consumed_at is None:
+        consumed_at = datetime.now()
+    elif getattr(consumed_at, "tzinfo", None) is not None:
+        # Convert timezone-aware datetime to naive local datetime for consistent SQLite date handling
+        consumed_at = consumed_at.astimezone().replace(tzinfo=None)
+
     intake = WaterIntake(
         user_id=current_user.id,
         amount_ml=req.amount_ml,
-        consumed_at=req.consumed_at or datetime.now(timezone.utc),
+        consumed_at=consumed_at,
         note=req.note,
     )
     db.add(intake)
@@ -87,6 +94,8 @@ def update_water_intake(
     if not intake:
         raise HTTPException(status_code=404, detail="Water intake entry not found.")
     for field, value in req.model_dump(exclude_unset=True).items():
+        if field == "consumed_at" and value is not None and getattr(value, "tzinfo", None) is not None:
+            value = value.astimezone().replace(tzinfo=None)
         setattr(intake, field, value)
     db.commit()
     db.refresh(intake)

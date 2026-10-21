@@ -22,7 +22,7 @@ def get_daily_activity(
     db: Session = Depends(get_db),
 ):
     """Get step count for a specific date (defaults to today)."""
-    target_date = activity_date or today_utc()
+    target_date = activity_date or datetime.now().date()
     record = (
         db.query(DailyActivity)
         .filter(

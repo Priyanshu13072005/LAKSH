@@ -13,7 +13,7 @@ const api = axios.create({
 // Request interceptor: attach JWT token if present
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('laksh_token') || localStorage.getItem('fitlog_token');
+    const token = localStorage.getItem('laksh_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -31,8 +31,6 @@ api.interceptors.response.use(
       if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
         localStorage.removeItem('laksh_token');
         localStorage.removeItem('laksh_user');
-        localStorage.removeItem('fitlog_token');
-        localStorage.removeItem('fitlog_user');
         window.location.href = '/login';
       }
     }
@@ -46,6 +44,28 @@ export const authAPI = {
   getProfile: () => api.get('/auth/me'),
   updateProfile: (data) => api.patch('/auth/me', data),
   changePassword: (data) => api.patch('/auth/me/password', data),
+  uploadProfilePhoto: (formData) =>
+    api.post('/auth/profile-photo', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  deleteProfilePhoto: () => api.delete('/auth/profile-photo'),
+};
+
+export const getMediaUrl = (url) => {
+  if (!url) return '';
+  if (
+    url.startsWith('http://') ||
+    url.startsWith('https://') ||
+    url.startsWith('data:') ||
+    url.startsWith('blob:')
+  ) {
+    return url;
+  }
+  const rawBase = import.meta.env.VITE_API_URL || '';
+  if (rawBase) {
+    return `${rawBase.replace(/\/+$/, '')}${url.startsWith('/') ? '' : '/'}${url}`;
+  }
+  return url;
 };
 
 export const workoutAPI = {
@@ -97,6 +117,10 @@ export const exerciseAPI = {
 export const activityAPI = {
   getDailyActivity: (date) => api.get('/activity/daily', { params: { activity_date: date } }),
   upsertDailyActivity: (date, data) => api.put(`/activity/daily/${date}`, data),
+  logActivity: (data) => {
+    const targetDate = data.activity_date || new Date().toISOString().split('T')[0];
+    return api.put(`/activity/daily/${targetDate}`, { steps: data.steps });
+  },
   getHistory: (params) => api.get('/activity/history', { params }),
 
   // Google Fit / Health Connect Auto-Sync
@@ -119,7 +143,7 @@ export const goalsAPI = {
 };
 
 export const analyticsAPI = {
-  getDashboard: () => api.get('/analytics/dashboard'),
+  getDashboard: (params) => api.get('/analytics/dashboard', { params }),
   getWorkoutAnalytics: () => api.get('/analytics/workouts'),
   getExerciseProgression: (exerciseId) => api.get(`/analytics/exercises/${exerciseId}/progression`),
   getPersonalRecords: (params) => api.get('/analytics/records/personal-records', { params }),

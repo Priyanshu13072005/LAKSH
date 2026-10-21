@@ -11,7 +11,6 @@ from app.db.session import engine, SessionLocal
 from app.db.base import Base
 import app.models  # Ensure all models are registered
 from app.db.seed import seed_exercises
-from app.db.seed_demo import seed_demo_user
 
 from app.routers import (
     auth,
@@ -21,6 +20,7 @@ from app.routers import (
     hydration,
     goals,
     analytics,
+    templates,
 )
 
 
@@ -34,6 +34,7 @@ def _auto_migrate():
         ("users", "date_of_birth", "DATE NULL"),
         ("users", "gender", "VARCHAR(20) NULL"),
         ("users", "bio", "VARCHAR(500) NULL"),
+        ("workout_sets", "set_type", "VARCHAR(20) NOT NULL DEFAULT 'NORMAL'"),
     ]
     with engine.connect() as conn:
         for tbl, col, col_def in columns_to_ensure:
@@ -53,7 +54,6 @@ async def lifespan(app: FastAPI):
         db = SessionLocal()
         try:
             seed_exercises(db)
-            seed_demo_user(db)
         finally:
             db.close()
     except Exception as e:
@@ -62,12 +62,22 @@ async def lifespan(app: FastAPI):
     # Shutdown logic if needed
 
 
+import os
+from fastapi.staticfiles import StaticFiles
+
+UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "uploads")
+os.makedirs(os.path.join(UPLOAD_DIR, "profile_pics"), exist_ok=True)
+
 app = FastAPI(
     title=settings.APP_NAME,
     description="Personal Gym Workout & Fitness Tracker API",
     version="1.0.0",
     lifespan=lifespan,
 )
+
+# Serve static user uploads (profile photos, etc.)
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+app.mount("/api/uploads", StaticFiles(directory=UPLOAD_DIR), name="api_uploads")
 
 # CORS configuration
 app.add_middleware(
@@ -88,6 +98,7 @@ api_routers = [
     hydration.router,
     goals.router,
     analytics.router,
+    templates.router,
 ]
 
 for r in api_routers:

@@ -19,8 +19,10 @@ from app.utils.datetime_utils import today_utc
 def seed_demo_user(db: Session):
     demo_email = "athlete@laksh.app"
     user = db.query(User).filter(User.email.in_([demo_email, "athlete@fitlog.app"])).first()
-    if user and user.email == "athlete@fitlog.app":
-        user.email = demo_email
+    if user:
+        if user.email == "athlete@fitlog.app":
+            user.email = demo_email
+        user.password_hash = hash_password("fitness123")
         db.commit()
         db.refresh(user)
     if not user:
@@ -96,6 +98,7 @@ def seed_demo_user(db: Session):
                         set_number=s_num + 1,
                         weight_kg=weights[s_num],
                         repetitions=reps[s_num],
+                        set_type="NORMAL",
                         is_completed=True,
                     )
                     db.add(st)

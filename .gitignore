@@ -8,6 +8,10 @@ __pycache__/
 venv/
 ENV/
 *.sqlite3
+*.db
+
+# User uploads (profile photos, etc.)
+uploads/
 
 # Node & dependencies
 node_modules/
@@ -34,10 +38,5 @@ Thumbs.db
 *.sln
 *.sw?
 
-# Local automation & scheduler scripts
-*.ps1
-git_push.bat
-run_daily_push.bat
-commit_schedule.json
-schedule_state.json
+
 

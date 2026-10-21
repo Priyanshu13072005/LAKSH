@@ -5,15 +5,15 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('laksh_user') || localStorage.getItem('fitlog_user');
+    const saved = localStorage.getItem('laksh_user');
     return saved ? JSON.parse(saved) : null;
   });
-  const [token, setToken] = useState(() => localStorage.getItem('laksh_token') || localStorage.getItem('fitlog_token'));
+  const [token, setToken] = useState(() => localStorage.getItem('laksh_token'));
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const verifyUser = async () => {
-      const storedToken = localStorage.getItem('laksh_token') || localStorage.getItem('fitlog_token');
+      const storedToken = localStorage.getItem('laksh_token');
       if (storedToken) {
         try {
           const res = await authAPI.getProfile();
@@ -52,8 +52,6 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('laksh_token');
     localStorage.removeItem('laksh_user');
-    localStorage.removeItem('fitlog_token');
-    localStorage.removeItem('fitlog_user');
     setToken(null);
     setUser(null);
   };

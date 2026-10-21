@@ -3,7 +3,7 @@ LAKSH - Auth schemas for registration, login, and token responses.
 """
 
 from pydantic import BaseModel, EmailStr, Field
-from datetime import date
+from datetime import date, datetime
 
 
 class RegisterRequest(BaseModel):
@@ -36,6 +36,7 @@ class UserResponse(BaseModel):
     date_of_birth: date | None = None
     gender: str | None = None
     bio: str | None = None
+    created_at: datetime | None = None
 
     model_config = {"from_attributes": True}
 

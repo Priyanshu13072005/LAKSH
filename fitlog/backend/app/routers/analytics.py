@@ -31,11 +31,12 @@ router = APIRouter(prefix="/analytics", tags=["Analytics"])
 
 @router.get("/dashboard", response_model=DashboardSummary)
 def get_dashboard_summary(
+    target_date: date | None = Query(None),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Aggregate all stats needed for the dashboard."""
-    today = today_utc()
+    today = target_date or datetime.now().date()
 
     # 1. User Goals
     goals = db.query(UserGoal).filter(UserGoal.user_id == current_user.id).first()

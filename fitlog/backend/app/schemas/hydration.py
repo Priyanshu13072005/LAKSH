@@ -14,6 +14,7 @@ class WaterIntakeCreate(BaseModel):
 
 class WaterIntakeUpdate(BaseModel):
     amount_ml: int | None = Field(None, gt=0, le=5000)
+    consumed_at: datetime | None = None
     note: str | None = Field(None, max_length=255)
 
 

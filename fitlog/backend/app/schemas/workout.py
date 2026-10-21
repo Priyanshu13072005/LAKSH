@@ -14,6 +14,7 @@ class SetCreate(BaseModel):
     weight_kg: float | None = Field(None, ge=0)
     rest_seconds: int | None = Field(None, ge=0)
     is_completed: bool = False
+    set_type: str = Field("NORMAL", max_length=20)  # NORMAL, WARMUP, DROP, FAILURE
     notes: str | None = None
 
 
@@ -23,6 +24,7 @@ class SetUpdate(BaseModel):
     weight_kg: float | None = Field(None, ge=0)
     rest_seconds: int | None = Field(None, ge=0)
     is_completed: bool | None = None
+    set_type: str | None = None
     notes: str | None = None
 
 
@@ -34,6 +36,7 @@ class SetResponse(BaseModel):
     weight_kg: float | None
     rest_seconds: int | None
     is_completed: bool
+    set_type: str = "NORMAL"
     notes: str | None
 
     model_config = {"from_attributes": True}

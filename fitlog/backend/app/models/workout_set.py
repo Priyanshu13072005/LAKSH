@@ -3,7 +3,7 @@ LAKSH - WorkoutSet model.
 Individual set record within a workout exercise.
 """
 
-from sqlalchemy import Column, Integer, Float, Boolean, Text, ForeignKey
+from sqlalchemy import Column, Integer, Float, Boolean, Text, ForeignKey, String
 from sqlalchemy.orm import relationship
 from app.db.base import Base
 
@@ -23,6 +23,9 @@ class WorkoutSet(Base):
     weight_kg = Column(Float, nullable=True)  # NULL for bodyweight exercises
     rest_seconds = Column(Integer, nullable=True)
     is_completed = Column(Boolean, default=False, nullable=False)
+    set_type = Column(
+        String(20), default="NORMAL", nullable=False
+    )  # NORMAL, WARMUP, DROP, FAILURE
     notes = Column(Text, nullable=True)
 
     # Relationship
