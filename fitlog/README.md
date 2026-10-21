@@ -71,8 +71,8 @@ npm run dev
 
 ---
 
-## 🔑 Demo Account
+## 🚀 Getting Started
 
-For instant testing, click the **"⚡ Fill Demo Credentials"** button on the Login page or use:
-- **Email**: `athlete@laksh.app`
-- **Password**: `fitness123`
+1. Launch the app using `start_laksh.bat` (or deploy online).
+2. Click **Create an account** on the login page to register your own secure profile.
+3. Start logging your workouts, tracking hydration, and setting personal fitness records!

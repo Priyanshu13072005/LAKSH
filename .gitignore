@@ -1,17 +1,29 @@
+# Environment & Secrets (NEVER COMMIT)
+.env
+*.env
+.env.*
+.env.local
+!.env.example
+*.pem
+*.key
+*.cert
+
 # Python & virtual environments
 __pycache__/
 *.py[cod]
 *$py.class
-*.env
-!.env.example
 .venv/
 venv/
 ENV/
+*.sqlite
 *.sqlite3
 *.db
+*.sql
+*.bak
 
-# User uploads (profile photos, etc.)
+# User uploads & media
 uploads/
+**/uploads/
 
 # Node & dependencies
 node_modules/
