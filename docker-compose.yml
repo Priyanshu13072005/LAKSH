@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./fitlog/backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=development
+      - CORS_ORIGINS=http://localhost:5173
+      - JWT_SECRET_KEY=dev-secret-key-change-in-production
+    volumes:
+      - ./fitlog/backend:/app
+    restart: unless-stopped
