@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -9,15 +9,25 @@ import GoalModal from './components/GoalModal';
 import Dashboard from './pages/Dashboard';
 import Workouts from './pages/Workouts';
 import ActiveWorkout from './pages/ActiveWorkout';
-import PersonalRecords from './pages/PersonalRecords';
-import Exercises from './pages/Exercises';
-import Templates from './pages/Templates';
-import Hydration from './pages/Hydration';
-import Activity from './pages/Activity';
-import Analytics from './pages/Analytics';
-import Profile from './pages/Profile';
 import Login from './pages/Login';
 import Register from './pages/Register';
+
+// Code-split secondary routes for faster initial load
+const PersonalRecords = lazy(() => import('./pages/PersonalRecords'));
+const Exercises = lazy(() => import('./pages/Exercises'));
+const Templates = lazy(() => import('./pages/Templates'));
+const Hydration = lazy(() => import('./pages/Hydration'));
+const Activity = lazy(() => import('./pages/Activity'));
+const Analytics = lazy(() => import('./pages/Analytics'));
+const Profile = lazy(() => import('./pages/Profile'));
+
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center min-h-[50vh]">
+      <div className="w-8 h-8 rounded-full border-2 border-red-500 border-t-transparent animate-spin" />
+    </div>
+  );
+}
 
 function AppLayout({ children }) {
   const [goalModalOpen, setGoalModalOpen] = useState(false);
@@ -26,7 +36,9 @@ function AppLayout({ children }) {
     <div className="min-h-screen bg-[#08080a] flex flex-col">
       <Navbar onOpenGoalModal={() => setGoalModalOpen(true)} />
       <main className="flex-1 pb-24 lg:pb-8">
-        {React.cloneElement(children, { onOpenGoalModal: () => setGoalModalOpen(true) })}
+        <Suspense fallback={<PageLoader />}>
+          {React.cloneElement(children, { onOpenGoalModal: () => setGoalModalOpen(true) })}
+        </Suspense>
       </main>
       <BottomNav />
       <GoalModal
