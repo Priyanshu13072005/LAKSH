@@ -195,3 +195,28 @@
     border-radius: 1rem;
   }
 }
+
+/* Page enter and micro-interaction animations */
+@keyframes fadeInSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeInSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.interactive-hover {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.interactive-hover:hover {
+  transform: translateY(-1px);
+  border-color: rgba(239, 68, 68, 0.4);
+}
