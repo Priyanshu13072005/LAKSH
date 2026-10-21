@@ -22,7 +22,7 @@ import {
   Download
 } from 'lucide-react';
 import { workoutAPI, exerciseAPI, analyticsAPI } from '../services/api';
-import { getLocalDateStr } from '../utils/dateUtils';
+import { getLocalDateStr, parseUtcDate } from '../utils/dateUtils';
 
 const PRESET_ACTIVITIES = [
   { name: 'Chest & Triceps', defaultMuscle: 'Chest' },
@@ -589,7 +589,7 @@ export default function Workouts() {
                 Active Session In Progress: {activeSession.title}
               </h3>
               <p className="text-xs text-red-400/80">
-                Started {new Date(activeSession.started_at).toLocaleTimeString()} • {activeSession.exercises?.length || 0} exercises
+                Started {parseUtcDate(activeSession.started_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {activeSession.exercises?.length || 0} exercises
               </p>
             </div>
           </div>

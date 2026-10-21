@@ -69,8 +69,14 @@ def _enrich_exercise_response(we: WorkoutExercise) -> dict:
 def _build_workout_response(ws: WorkoutSession) -> dict:
     stats = _compute_workout_stats(ws)
     exercises = [_enrich_exercise_response(we) for we in ws.exercises]
+    data = {}
+    for c in ws.__table__.columns:
+        val = getattr(ws, c.name)
+        if isinstance(val, datetime) and val.tzinfo is None:
+            val = val.replace(tzinfo=timezone.utc)
+        data[c.name] = val
     return {
-        **{c.name: getattr(ws, c.name) for c in ws.__table__.columns},
+        **data,
         "exercises": exercises,
         **stats,
     }

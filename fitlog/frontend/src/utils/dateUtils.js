@@ -45,6 +45,26 @@ export const buildLocalDateTimeStr = (dateStr, timeStr) => {
 };
 
 /**
+ * Parses a UTC datetime string into a Date object.
+ * Fixes timezone skew where browsers parse ISO strings without 'Z' as local time.
+ * @param {string|Date|number} dateOrStr
+ * @returns {Date}
+ */
+export const parseUtcDate = (dateOrStr) => {
+  if (!dateOrStr) return new Date();
+  if (dateOrStr instanceof Date) return dateOrStr;
+  let str = String(dateOrStr).trim();
+  if (str.includes(' ') && !str.includes('T')) {
+    str = str.replace(' ', 'T');
+  }
+  // If no timezone offset is indicated, treat as UTC by appending 'Z'
+  if (!str.endsWith('Z') && !/[+-]\d{2}:?\d{2}$/.test(str)) {
+    str = `${str}Z`;
+  }
+  return new Date(str);
+};
+
+/**
  * Formats an ISO or datetime string into local display time (e.g. "07:16 PM").
  * @param {string|Date} dateOrStr
  * @returns {string}

@@ -79,6 +79,7 @@ class WorkoutCreate(BaseModel):
 class WorkoutUpdate(BaseModel):
     title: str | None = Field(None, max_length=200)
     workout_date: date | None = None
+    started_at: datetime | None = None
     duration_seconds: int | None = Field(None, ge=0)
     status: str | None = None
     notes: str | None = None

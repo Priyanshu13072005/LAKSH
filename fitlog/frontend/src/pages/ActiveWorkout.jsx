@@ -25,7 +25,7 @@ import {
   Zap
 } from 'lucide-react';
 import { workoutAPI, exerciseAPI } from '../services/api';
-import { getLocalDateStr } from '../utils/dateUtils';
+import { getLocalDateStr, parseUtcDate } from '../utils/dateUtils';
 import PlateCalculator from '../components/PlateCalculator';
 
 // Set type configuration
@@ -126,9 +126,9 @@ export default function ActiveWorkout() {
       setWorkout(activeData);
       setLiveTitle(activeData.title || 'Live Workout Session');
 
-      // Compute elapsed seconds from started_at
+      // Compute elapsed seconds from started_at using UTC parsing
       if (activeData.started_at) {
-        const start = new Date(activeData.started_at).getTime();
+        const start = parseUtcDate(activeData.started_at).getTime();
         const now = Date.now();
         const diff = Math.max(0, Math.floor((now - start) / 1000));
         setElapsedSeconds(diff);
@@ -226,6 +226,20 @@ export default function ActiveWorkout() {
     const mins = Math.floor((sec % 3600) / 60);
     const secs = sec % 60;
     return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Reset stopwatch to 00:00:00 and sync new start time
+  const handleResetTimer = async () => {
+    if (!workout) return;
+    const nowIso = new Date().toISOString();
+    setElapsedSeconds(0);
+    setIsTimerRunning(true);
+    try {
+      await workoutAPI.updateWorkout(workout.id, { started_at: nowIso });
+      setWorkout((prev) => (prev ? { ...prev, started_at: nowIso } : prev));
+    } catch (e) {
+      console.warn('Failed to sync reset started_at to backend:', e);
+    }
   };
 
   // Add Exercise to current session
@@ -430,6 +444,13 @@ export default function ActiveWorkout() {
                 title={isTimerRunning ? 'Pause timer' : 'Resume timer'}
               >
                 {isTimerRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 text-red-400" />}
+              </button>
+              <button
+                onClick={handleResetTimer}
+                className="p-1.5 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-white/10 transition-colors"
+                title="Reset timer to 00:00:00"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
               </button>
             </div>
 
