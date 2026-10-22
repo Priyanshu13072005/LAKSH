@@ -20,10 +20,14 @@ class Settings(BaseSettings):
     DB_USER: str = "root"
     DB_PASSWORD: str = ""
 
-    # JWT
+    # Direct database connection string (from Render, Supabase, Neon, Railway, etc.)
+    DATABASE_URL: str | None = None
+    DATABASE_URL_OVERRIDE: str | None = None
+
+    # JWT (Default 30 days retention so athlete sessions do not constantly expire)
     JWT_SECRET_KEY: str = "change-this-in-production"
     JWT_ALGORITHM: str = "HS256"
-    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 30
 
     # CORS
     CORS_ORIGINS: str = "http://localhost:5173"
@@ -33,12 +37,14 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_SECRET: str = ""
     GOOGLE_REDIRECT_URI: str = "http://localhost:5173/activity"
 
-    DATABASE_URL_OVERRIDE: str | None = None
-
     @property
-    def DATABASE_URL(self) -> str:
-        if self.DATABASE_URL_OVERRIDE:
-            return self.DATABASE_URL_OVERRIDE
+    def effective_database_url(self) -> str:
+        url = self.DATABASE_URL or self.DATABASE_URL_OVERRIDE
+        if url:
+            # SQLAlchemy 1.4/2.0 requires postgresql:// instead of legacy postgres://
+            if url.startswith("postgres://"):
+                url = url.replace("postgres://", "postgresql://", 1)
+            return url
         escaped_password = urllib.parse.quote_plus(self.DB_PASSWORD)
         return (
             f"mysql+pymysql://{self.DB_USER}:{escaped_password}"

@@ -20,8 +20,14 @@ export const AuthProvider = ({ children }) => {
           setUser(res.data);
           localStorage.setItem('laksh_user', JSON.stringify(res.data));
         } catch (err) {
-          console.warn('Session expired or invalid token:', err);
-          logout();
+          if (err.response && err.response.status === 401) {
+            console.warn('Session expired or invalid token (401):', err);
+            logout();
+          } else {
+            // Server cold start, temporary network disconnection, or 503 while waking up.
+            // Do NOT log out the user; retain the cached session credentials.
+            console.warn('Backend server is waking up or temporarily unreachable, retaining cached user session:', err?.message || err);
+          }
         }
       }
       setLoading(false);

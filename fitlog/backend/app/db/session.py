@@ -11,23 +11,30 @@ from app.core.config import settings
 
 
 def _create_database_engine():
-    db_url = settings.DATABASE_URL
+    db_url = settings.effective_database_url
     if not db_url.startswith("sqlite"):
         try:
-            # Test MySQL connection with a short timeout
+            # Appropriate connection timeouts based on driver
+            connect_args = {}
+            if "mysql" in db_url:
+                connect_args = {"connect_timeout": 5}
+            elif "postgres" in db_url:
+                connect_args = {"connect_timeout": 5}
+
             test_engine = create_engine(
                 db_url,
-                connect_args={"connect_timeout": 3},
+                connect_args=connect_args,
                 pool_pre_ping=True,
                 pool_size=10,
                 max_overflow=20,
             )
             with test_engine.connect() as conn:
                 conn.execute(text("SELECT 1"))
-            print(f"[DB] Successfully connected to MySQL at {settings.DB_HOST}:{settings.DB_PORT}")
+            dialect = test_engine.dialect.name
+            print(f"[DB] Successfully connected to persistent {dialect.upper()} database.")
             return test_engine
         except Exception as e:
-            print(f"[DB] MySQL is not reachable ({type(e).__name__}).")
+            print(f"[DB] Configured database is not reachable ({type(e).__name__}: {e}).")
             print(f"[DB] Seamlessly falling back to local SQLite database (laksh.db)...")
             base_dir = Path(__file__).resolve().parent.parent.parent
             sqlite_path = base_dir / "laksh.db"

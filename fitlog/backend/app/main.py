@@ -124,5 +124,6 @@ def health_check():
         "app": settings.APP_NAME,
         "env": settings.APP_ENV,
         "database": db_status,
+        "database_type": engine.dialect.name,
         "version": "1.0.0"
     }

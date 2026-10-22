@@ -16,3 +16,13 @@ services:
         value: "*"
       - key: PYTHON_VERSION
         value: 3.11.9
+      - key: DATABASE_URL
+        fromDatabase:
+          name: laksh-db
+          property: connectionString
+
+databases:
+  - name: laksh-db
+    databaseName: laksh_db
+    user: laksh_user
+    plan: free
