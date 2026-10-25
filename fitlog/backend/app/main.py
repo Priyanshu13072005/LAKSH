@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from app.core.config import settings
-from app.db.session import engine, SessionLocal
+from app.db.session import engine, SessionLocal, DB_INIT_ERROR, DB_ATTEMPTED_URL_MASKED
 from app.db.base import Base
 import app.models  # Ensure all models are registered
 from app.db.seed import seed_exercises
@@ -25,24 +25,32 @@ from app.routers import (
 
 
 def _auto_migrate():
-    from sqlalchemy import text
-    columns_to_ensure = [
-        ("users", "height_cm", "FLOAT NULL"),
-        ("users", "weight_kg", "FLOAT NULL"),
-        ("users", "fitness_goal", "VARCHAR(50) NULL"),
-        ("users", "profile_pic_url", "VARCHAR(512) NULL"),
-        ("users", "date_of_birth", "DATE NULL"),
-        ("users", "gender", "VARCHAR(20) NULL"),
-        ("users", "bio", "VARCHAR(500) NULL"),
-        ("workout_sets", "set_type", "VARCHAR(20) NOT NULL DEFAULT 'NORMAL'"),
-    ]
-    with engine.connect() as conn:
+    from sqlalchemy import text, inspect
+    try:
+        inspector = inspect(engine)
+        existing_tables = inspector.get_table_names()
+        columns_to_ensure = [
+            ("users", "height_cm", "FLOAT"),
+            ("users", "weight_kg", "FLOAT"),
+            ("users", "fitness_goal", "VARCHAR(50)"),
+            ("users", "profile_pic_url", "VARCHAR(512)"),
+            ("users", "date_of_birth", "DATE"),
+            ("users", "gender", "VARCHAR(20)"),
+            ("users", "bio", "VARCHAR(500)"),
+            ("workout_sets", "set_type", "VARCHAR(20) DEFAULT 'NORMAL'"),
+        ]
         for tbl, col, col_def in columns_to_ensure:
-            try:
-                conn.execute(text(f"ALTER TABLE {tbl} ADD COLUMN {col} {col_def}"))
-                conn.commit()
-            except Exception:
-                pass
+            if tbl not in existing_tables:
+                continue
+            cols = [c["name"] for c in inspector.get_columns(tbl)]
+            if col not in cols:
+                try:
+                    with engine.begin() as conn:
+                        conn.execute(text(f"ALTER TABLE {tbl} ADD COLUMN {col} {col_def}"))
+                except Exception as ex:
+                    print(f"[DB] Migration note: could not add {col} to {tbl}: {ex}")
+    except Exception as e:
+        print(f"[DB] Auto-migrate check notice: {e}")
 
 
 @asynccontextmanager
@@ -125,5 +133,7 @@ def health_check():
         "env": settings.APP_ENV,
         "database": db_status,
         "database_type": engine.dialect.name,
-        "version": "1.0.0"
+        "configured_target": DB_ATTEMPTED_URL_MASKED,
+        "init_error": DB_INIT_ERROR,
+        "version": "1.0.1"
     }
